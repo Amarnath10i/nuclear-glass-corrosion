@@ -1,0 +1,88 @@
+"""
+Bayesian Neural Network with variational inference.
+
+Reference:
+    Blundell, C. et al. (2015). Weight uncertainty in neural networks. ICML 2015.
+"""
+
+from __future__ import annotations
+
+import math
+from typing import Tuple
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+LOG_SIGMA_INIT = -3.0
+PRIOR_SIGMA1 = 1.0
+PRIOR_SIGMA2 = 0.001
+PRIOR_PI     = 0.5
+
+
+def log_gaussian(x: torch.Tensor, mu: float | torch.Tensor, sigma: float | torch.Tensor) -> torch.Tensor:
+    return (-0.5 * math.log(2 * math.pi)
+            - torch.log(torch.as_tensor(sigma, dtype=torch.float32))
+            - (x - mu) ** 2 / (2 * sigma ** 2))
+
+
+class BayesianLinear(nn.Module):
+    """Linear layer with Gaussian weight posterior."""
+
+    def __init__(self, in_features: int, out_features: int) -> None:
+        super().__init__()
+        self.weight_mu  = nn.Parameter(torch.empty(out_features, in_features).normal_(0, 0.1))
+        self.weight_rho = nn.Parameter(torch.full((out_features, in_features), LOG_SIGMA_INIT))
+        self.bias_mu    = nn.Parameter(torch.zeros(out_features))
+        self.bias_rho   = nn.Parameter(torch.full((out_features,), LOG_SIGMA_INIT))
+
+    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        w_sigma = F.softplus(self.weight_rho)
+        b_sigma = F.softplus(self.bias_rho)
+        w = self.weight_mu + w_sigma * torch.randn_like(self.weight_mu)
+        b = self.bias_mu   + b_sigma * torch.randn_like(self.bias_mu)
+        out = F.linear(x, w, b)
+
+        def _kl(param: torch.Tensor, sigma: torch.Tensor) -> torch.Tensor:
+            log_post  = log_gaussian(param, 0.0, sigma).sum()
+            log_prior = torch.log(
+                PRIOR_PI * torch.exp(log_gaussian(param, 0.0, PRIOR_SIGMA1))
+                + (1.0 - PRIOR_PI) * torch.exp(log_gaussian(param, 0.0, PRIOR_SIGMA2))
+            ).sum()
+            return log_post - log_prior
+
+        return out, _kl(w, w_sigma) + _kl(b, b_sigma)
+
+
+class BayesianMLP(nn.Module):
+    """Variational Bayesian MLP for corrosion rate prediction."""
+
+    def __init__(
+        self,
+        in_features: int = 5,
+        out_features: int = 1,
+        hidden_dim: int = 128,
+        n_layers: int = 4,
+    ) -> None:
+        super().__init__()
+        dims = [in_features] + [hidden_dim] * (n_layers - 1) + [out_features]
+        self.layers = nn.ModuleList(
+            [BayesianLinear(dims[i], dims[i + 1]) for i in range(len(dims) - 1)]
+        )
+
+    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        total_kl = torch.tensor(0.0, device=x.device)
+        for i, layer in enumerate(self.layers):
+            x, kl = layer(x)
+            total_kl = total_kl + kl
+            if i < len(self.layers) - 1:
+                x = F.gelu(x)
+        return x, total_kl
+
+    def elbo_loss(self, x: torch.Tensor, y: torch.Tensor, n_samples: int = 10, dataset_size: int = 1000) -> torch.Tensor:
+        lls, kls = [], []
+        for _ in range(n_samples):
+            y_pred, kl = self(x)
+            lls.append(-F.mse_loss(y_pred.squeeze(), y))
+            kls.append(kl)
+        return -(torch.stack(lls).mean() - torch.stack(kls).mean() / dataset_size)
