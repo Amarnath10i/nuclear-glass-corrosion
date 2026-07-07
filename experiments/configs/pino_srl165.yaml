@@ -1,0 +1,34 @@
+name: pino_srl165
+output_dir: outputs/pino_srl165
+physics:
+  temperature_K: 363.15
+  pH: 7.0
+  activation_energy_kJ_mol: 72.0
+  pre_exponential_factor: 1.0e-10
+  affinity_exponent: 1.0
+  radiation_dose_Gy: 0.0
+model:
+  architecture: pino
+  hidden_dim: 128
+  num_layers: 6
+  dropout: 0.1
+  activation: gelu
+  use_physics_loss: true
+  physics_loss_weight: 1.0
+training:
+  epochs: 300
+  batch_size: 32
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-5
+  scheduler: cosine
+  warmup_epochs: 20
+  gradient_clip_norm: 1.0
+  seed: 42
+data:
+  dataset: srl165
+  data_dir: data/processed/srl165
+  train_fraction: 0.70
+  val_fraction: 0.15
+  normalise: true
+  augment: true
+wandb_project: nuclear-glass-corrosion

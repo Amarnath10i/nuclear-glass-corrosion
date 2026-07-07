@@ -1,0 +1,33 @@
+name: deeponet_affinity
+output_dir: outputs/deeponet_affinity
+physics:
+  temperature_K: 298.15
+  pH: 9.0
+  activation_energy_kJ_mol: 72.0
+  pre_exponential_factor: 1.0e-10
+  affinity_exponent: 1.0
+  radiation_dose_Gy: 0.0
+model:
+  architecture: deeponet
+  hidden_dim: 256
+  num_layers: 5
+  dropout: 0.05
+  activation: tanh
+  use_physics_loss: true
+  physics_loss_weight: 0.5
+training:
+  epochs: 200
+  batch_size: 64
+  learning_rate: 5.0e-4
+  weight_decay: 1.0e-5
+  scheduler: cosine
+  warmup_epochs: 10
+  gradient_clip_norm: 1.0
+  seed: 0
+data:
+  dataset: isg
+  data_dir: data/processed/isg
+  train_fraction: 0.70
+  val_fraction: 0.15
+  normalise: true
+  augment: false
