@@ -57,3 +57,4 @@ def combined_loss(
 ) -> torch.Tensor:
     """Weighted sum of data + physics losses."""
     return data_loss(y_pred, y_true) + lambda_pde * pde_residual + lambda_tst * tst_residual
+

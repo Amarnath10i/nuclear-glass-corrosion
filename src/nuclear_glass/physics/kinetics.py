@@ -57,3 +57,4 @@ def compute_bnl(
     if r.ndim == 0:
         return float(r) * float(t) * M_B
     return np.trapz(r, t) * M_B
+
