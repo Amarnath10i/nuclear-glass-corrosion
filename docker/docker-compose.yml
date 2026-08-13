@@ -1,0 +1,12 @@
+version: '3.9'
+services:
+  train:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    volumes:
+      - ../data:/workspace/data
+      - ../outputs:/workspace/outputs
+    environment:
+      - WANDB_API_KEY=
+    command: python -m src.cli.train --config experiments/configs/pino_srl165.yaml
