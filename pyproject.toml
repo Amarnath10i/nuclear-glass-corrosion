@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nuclear-glass-corrosion"
-version = "0.1.0"
+version = "0.2.0"
 description = "Physics-Informed ML for Nuclear Waste Glass Corrosion Prediction (100 kyr)"
 readme = "README.md"
 license = {text = "MIT"}
@@ -80,3 +80,7 @@ disallow_untyped_defs = true
 [tool.wandb]
 project = "nuclear-glass-corrosion"
 entity = "amarnath10i"
+[project.scripts]
+nuclear-glass-train    = "nuclear_glass.cli.train:main"
+nuclear-glass-evaluate = "nuclear_glass.cli.evaluate:main"
+nuclear-glass-benchmark = "nuclear_glass.cli.benchmark:main"
