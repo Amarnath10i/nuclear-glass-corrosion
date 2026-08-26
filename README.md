@@ -6,7 +6,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org/)
 
-## 🎯 Project Overview
+## Project Overview
 
 This project develops **physics-informed machine learning models** to predict the corrosion behavior of borosilicate nuclear waste glass over **100,000-year timescales** — a critical requirement for geological repository safety cases (e.g., Yucca Mountain, WIPP, Cigéo, ONKALO).
 
@@ -27,7 +27,7 @@ This project develops **physics-informed machine learning models** to predict th
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 nuclear-glass-corrosion/
@@ -84,7 +84,7 @@ nuclear-glass-corrosion/
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Installation
 
@@ -122,7 +122,7 @@ python -m src.cli.benchmark --config experiments/configs/benchmark.yaml
 
 ---
 
-## 📊 Key Datasets
+## Key Datasets
 
 | Dataset | Description | Source | Timescale |
 |---------|-------------|--------|-----------|
@@ -135,7 +135,7 @@ python -m src.cli.benchmark --config experiments/configs/benchmark.yaml
 
 ---
 
-## 🧪 Physics Constraints Implemented
+## Physics Constraints Implemented
 
 1. **Thermodynamic Consistency**: Affinity-based rate law (TST)
    ```
@@ -152,7 +152,7 @@ python -m src.cli.benchmark --config experiments/configs/benchmark.yaml
 
 ---
 
-## 📈 Target Publications (Q1 Journals)
+## Target Publications (Q1 Journals)
 
 | Paper | Target Journal | Timeline |
 |-------|----------------|----------|
@@ -163,7 +163,7 @@ python -m src.cli.benchmark --config experiments/configs/benchmark.yaml
 
 ---
 
-## 🏗️ Startup Potential
+## Startup Potential
 
 **Company**: *Vitreous AI* (working name)
 
@@ -172,23 +172,3 @@ python -m src.cli.benchmark --config experiments/configs/benchmark.yaml
 - **Product**: Regulatory-grade corrosion prediction with UQ for safety cases
 - **Moat**: Only physics-informed ML with validated UQ for 100 kyr predictions
 - **Revenue**: $500K-$2M/year per license (regulatory requirement)
-
----
-
-## 🤝 Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
----
-
-## 📄 License
-
-MIT License — see [LICENSE](LICENSE) for details.
-
----
-
-## 📞 Contact
-
-**Amarnath** — [@Amarnath10i](https://github.com/Amarnath10i)
-- Research: Multi-scale ML for nuclear materials
-- Open to: PhD positions, research collaborations, startup co-founders
