@@ -6,24 +6,45 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org/)
 
-## Project Overview
+## About the Project
 
-This project develops **physics-informed machine learning models** to predict the corrosion behavior of borosilicate nuclear waste glass over **100,000-year timescales** — a critical requirement for geological repository safety cases (e.g., Yucca Mountain, WIPP, Cigéo, ONKALO).
+Safe disposal of high-level nuclear waste is one of the most pressing environmental challenges of our time. The international consensus is to immobilize this waste by vitrifying it into borosilicate glass and burying it in deep geological repositories. For these repositories to be approved, regulatory bodies require robust safety cases proving that the glass will contain the radioactive elements for over **100,000 years**.
 
-### The Challenge
-- **Timescale gap**: Lab experiments run for years; repositories must prove safety for 100,000+ years
-- **Multi-physics**: Coupled chemical dissolution, diffusion, precipitation, radiation effects
-- **Multi-scale**: Ångstrom (bond breaking) → micron (gel layer) → meter (repository near-field)
-- **Data scarcity**: Limited long-term experimental data, heavy reliance on accelerated tests
+Because we cannot run laboratory experiments for 100 millennia, traditional methods rely on accelerated testing and complex, computationally expensive reactive transport models that struggle to scale over long time horizons.
 
-### Our Approach
-| Scale | Method | Output |
-|-------|--------|--------|
-| **Atomistic** | Reactive MD (ReaxFF) + DFT | Bond breaking rates, activation energies |
-| **Mesoscale** | Phase-field / KMC | Gel layer growth, porosity evolution |
-| **Continuum** | Reactive transport (PFLOTRAN/TOUGHREACT) | pH, saturation indices, radionuclide release |
-| **ML Surrogate** | Physics-Informed Neural Operators (PINO/DeepONet) | 1000× speedup with UQ |
-| **UQ** | Bayesian NN + Conformal Prediction | Validated uncertainty bounds |
+**This project bridges this gap by developing physics-informed machine learning (ML) surrogates that predict the long-term corrosion behavior of nuclear waste glass.**
+
+By embedding known physical laws (such as Transition-State Theory rate laws and mass conservation) directly into the neural network's loss function, our models can extrapolate far beyond the temporal limits of training data without violating thermodynamic constraints.
+
+## How It Works
+
+The repository implements a complete multi-scale framework that bridges atomic-level interactions to repository-scale predictions:
+
+1. **Multi-Scale Physics Coupling**
+   - **Atomistic Scale**: Data derived from Reactive Molecular Dynamics (ReaxFF) determines fundamental parameters like bond-breaking rates and activation energies.
+   - **Mesoscale**: We model the formation of the passivating "gel layer" on the glass surface and track its porosity and diffusion characteristics over time.
+   - **Continuum Scale**: The atomic and mesoscale parameters are homogenized and fed into 1D reactive transport models to predict large-scale radionuclide release.
+
+2. **Physics-Informed ML Surrogates (PINO / DeepONet)**
+   - Instead of running slow numerical PDE solvers for every scenario, we train neural operators (like FNOs and DeepONets) to learn the underlying solution operator.
+   - The networks are trained on experimental datasets (like SRL 165 and ISG) and penalized if their predictions violate the governing partial differential equations (PDEs) of reactive transport.
+   - **Result**: A model that runs 1000× faster than numerical simulators while remaining physically consistent.
+
+3. **Uncertainty Quantification (UQ)**
+   - For regulatory safety cases, predicting a single number isn't enough; we must rigorously quantify confidence bounds.
+   - The framework uses Bayesian Neural Networks to separate epistemic (model) uncertainty from aleatoric (data) uncertainty.
+   - We also apply split Conformal Prediction to guarantee strict coverage probabilities for our 100,000-year extrapolations.
+
+## Tools & Technologies
+
+This project is built using a modern scientific Python stack tailored for high-performance ML and physics simulations:
+
+- **Core ML Framework**: [PyTorch](https://pytorch.org/) (used for PINO, DeepONet, and Bayesian NNs)
+- **Data & Scientific Computing**: `numpy`, `pandas`, `scipy`
+- **Configuration Management**: `pydantic` and `omegaconf` for structured, type-safe experiment configs
+- **Experiment Tracking**: [Weights & Biases (WandB)](https://wandb.ai/) for logging metrics, losses, and hyperparameters
+- **Visualization**: `matplotlib` for domain-specific Arrhenius plots and uncertainty bounds
+- **Environment & CI/CD**: Docker for reproducible training environments, GitHub Actions for continuous integration, and `pre-commit` hooks for code formatting (using `ruff` and `black`)
 
 ---
 
@@ -161,14 +182,3 @@ python -m src.cli.benchmark --config experiments/configs/benchmark.yaml
 | **Conformal Prediction for Nuclear Waste Form Performance** | *Environmental Science & Technology* | Month 12-15 |
 | **Radiation-Enhanced Corrosion: ML Surrogate for Alpha-Dose Effects** | *Acta Materialia* | Month 15-18 |
 
----
-
-## Startup Potential
-
-**Company**: *Vitreous AI* (working name)
-
-**Business Model**: SaaS platform for nuclear waste organizations
-- **Customers**: DOE (EM), ANDRA (France), NDA (UK), NWMO (Canada), POSIVA (Finland), Rosatom
-- **Product**: Regulatory-grade corrosion prediction with UQ for safety cases
-- **Moat**: Only physics-informed ML with validated UQ for 100 kyr predictions
-- **Revenue**: $500K-$2M/year per license (regulatory requirement)
