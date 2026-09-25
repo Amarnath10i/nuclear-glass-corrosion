@@ -18,7 +18,7 @@ def build_diffusion_matrix(n: int, D: float, dx: float) -> NDArray[np.float64]:
     alpha = D / dx**2
     diag = np.full(n, -2.0 * alpha)
     off  = np.full(n - 1, alpha)
-    A = np.diag(diag) + np.diag(off, 1) + np.diag(off, -1)
+    A: NDArray[np.float64] = np.diag(diag) + np.diag(off, 1) + np.diag(off, -1)
     A[0, 0] = -alpha
     A[0, 1] = alpha
     A[-1, -1] = 0.0
