@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from rich.console import Console
 from rich.logging import RichHandler
@@ -22,7 +21,7 @@ _LEVEL_MAP = {
 def get_logger(
     name: str,
     level: str = "info",
-    log_file: Optional[str] = None,
+    log_file: str | None = None,
 ) -> logging.Logger:
     """Return a configured logger with Rich console output."""
     logger = logging.getLogger(name)

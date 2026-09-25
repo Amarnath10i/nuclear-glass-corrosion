@@ -1,13 +1,16 @@
 """Unit tests for physics modules."""
 
 import math
+
 import numpy as np
 import pytest
 
+from nuclear_glass.physics.kinetics import boron_release_rate, stage2_residual_rate
 from nuclear_glass.physics.thermodynamics import (
-    arrhenius_rate_constant, affinity_factor, dissolution_rate, GlassComposition,
+    GlassComposition,
+    affinity_factor,
+    arrhenius_rate_constant,
 )
-from nuclear_glass.physics.kinetics import stage1_rate, stage2_residual_rate, boron_release_rate
 from nuclear_glass.physics.transport import silicic_acid_saturation
 
 

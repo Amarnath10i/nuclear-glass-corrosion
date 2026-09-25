@@ -22,7 +22,7 @@ def parse_pflotran_h5(path: Path | str, group: str = "/Observation") -> pd.DataF
         times = grp["Time [s]"][:]
         for i, t in enumerate(times):
             row: dict[str, Any] = {"time_s": float(t)}
-            for key in grp.keys():
+            for key in grp:
                 if key == "Time [s]":
                     continue
                 data = grp[key][:]

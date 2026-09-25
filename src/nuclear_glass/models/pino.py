@@ -31,7 +31,8 @@ class SpectralConv1d(nn.Module):
         out_ft = torch.zeros(B, self.out_channels, N // 2 + 1, dtype=torch.cfloat, device=x.device)
         w = torch.view_as_complex(self.weights)
         out_ft[:, :, : self.modes] = torch.einsum("bix,iox->box", x_ft[:, :, : self.modes], w)
-        return torch.fft.irfft(out_ft, n=N)
+        out: torch.Tensor = torch.fft.irfft(out_ft, n=N)
+        return out
 
 
 class FNOBlock1d(nn.Module):
@@ -70,7 +71,8 @@ class PINO(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.lift(x)
         x = self.blocks(x)
-        return self.project(x)
+        out: torch.Tensor = self.project(x)
+        return out
 
     def physics_residual(self, x: torch.Tensor, y_pred: torch.Tensor, dt: float = 1.0) -> torch.Tensor:
         """Mass-conservation PDE residual penalty."""

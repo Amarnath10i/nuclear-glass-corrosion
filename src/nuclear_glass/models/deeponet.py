@@ -11,7 +11,7 @@ import torch
 import torch.nn as nn
 
 
-def _mlp(in_dim: int, hidden_dim: int, out_dim: int, n_layers: int, activation=nn.GELU) -> nn.Sequential:
+def _mlp(in_dim: int, hidden_dim: int, out_dim: int, n_layers: int, activation: type[nn.Module] = nn.GELU) -> nn.Sequential:
     layers: list[nn.Module] = [nn.Linear(in_dim, hidden_dim), activation()]
     for _ in range(n_layers - 2):
         layers += [nn.Linear(hidden_dim, hidden_dim), activation()]
@@ -42,4 +42,5 @@ class DeepONet(nn.Module):
 
     @staticmethod
     def data_driven_loss(u_pred: torch.Tensor, u_true: torch.Tensor) -> torch.Tensor:
-        return ((u_pred - u_true).norm(dim=-1) / (u_true.norm(dim=-1) + 1e-8)).mean()
+        loss: torch.Tensor = ((u_pred - u_true).norm(dim=-1) / (u_true.norm(dim=-1) + 1e-8)).mean()
+        return loss

@@ -1,4 +1,4 @@
-"\""
+"""
 Bayesian Neural Network with variational inference.
 
 Uses reparameterisation trick for weight uncertainty (aleatoric + epistemic).
@@ -9,13 +9,12 @@ Reference:
 
 Changelog:
     - 2026-07-30: Fixed KL divergence closure bug in BayesianLinear
-      (inner \kl\ function now takes explicit w/b arguments).
-"\""
+      (inner `kl` function now takes explicit w/b arguments).
+"""
 
 from __future__ import annotations
 
 import math
-from typing import Tuple
 
 import torch
 import torch.nn as nn
@@ -30,7 +29,7 @@ def log_gaussian(x: torch.Tensor, mu: float | torch.Tensor, sigma: float | torch
     return -0.5 * math.log(2 * math.pi) - torch.log(torch.as_tensor(sigma, dtype=torch.float32)) - (x - mu) ** 2 / (2 * sigma ** 2)
 
 def _kl_divergence(param: torch.Tensor, sigma: torch.Tensor) -> torch.Tensor:
-    "\""KL divergence from Gaussian posterior to scale-mixture prior."\""
+    """KL divergence from Gaussian posterior to scale-mixture prior."""
     log_post  = log_gaussian(param, 0.0, sigma).sum()
     log_prior = torch.log(
         PRIOR_PI * torch.exp(log_gaussian(param, 0.0, PRIOR_SIGMA1))
@@ -39,7 +38,7 @@ def _kl_divergence(param: torch.Tensor, sigma: torch.Tensor) -> torch.Tensor:
     return log_post - log_prior
 
 class BayesianLinear(nn.Module):
-    "\""Linear layer with Gaussian weight posterior."\""
+    """Linear layer with Gaussian weight posterior."""
 
     def __init__(self, in_features: int, out_features: int) -> None:
         super().__init__()
@@ -51,8 +50,8 @@ class BayesianLinear(nn.Module):
         self.bias_mu      = nn.Parameter(torch.zeros(out_features))
         self.bias_rho     = nn.Parameter(torch.full((out_features,), LOG_SIGMA_INIT))
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
-        "\""Return (output, kl_divergence)."\""
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        """Return (output, kl_divergence)."""
         w_sigma = F.softplus(self.weight_rho)
         b_sigma = F.softplus(self.bias_rho)
         w = self.weight_mu + w_sigma * torch.randn_like(self.weight_mu)
@@ -64,7 +63,7 @@ class BayesianLinear(nn.Module):
         return out, kl_w + kl_b
 
 class BayesianMLP(nn.Module):
-    "\""Variational Bayesian MLP for corrosion rate prediction."\""
+    """Variational Bayesian MLP for corrosion rate prediction."""
 
     def __init__(
         self,
@@ -79,7 +78,7 @@ class BayesianMLP(nn.Module):
             [BayesianLinear(dims[i], dims[i + 1]) for i in range(len(dims) - 1)]
         )
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         total_kl = torch.tensor(0.0, device=x.device)
         for i, layer in enumerate(self.layers):
             x, kl = layer(x)
@@ -95,7 +94,7 @@ class BayesianMLP(nn.Module):
         n_samples: int = 10,
         dataset_size: int = 1000,
     ) -> torch.Tensor:
-        "\""Monte Carlo ELBO: E[log p(y|w)] - KL[q(w)||p(w)]."\""
+        """Monte Carlo ELBO: E[log p(y|w)] - KL[q(w)||p(w)]."""
         log_likelihoods = []
         kls = []
         for _ in range(n_samples):

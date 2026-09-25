@@ -12,11 +12,13 @@ from __future__ import annotations
 import numpy as np
 
 
-def stage1_rate(k0: float, temperature_K: float, Ea_kJ_mol: float, pH: float) -> float:
+def stage1_rate(
+    k0: float, temperature_K: float | np.ndarray, Ea_kJ_mol: float, pH: float
+) -> float | np.ndarray:
     """Forward dissolution rate in Stage I (far from saturation) [m/s]."""
     from nuclear_glass.physics.thermodynamics import arrhenius_rate_constant
     k = arrhenius_rate_constant(k0, Ea_kJ_mol, temperature_K)
-    return k * (10.0 ** (-pH)) ** (-0.4)
+    return np.asarray(k * (10.0 ** (-pH)) ** (-0.4))
 
 
 def stage2_residual_rate(
@@ -49,12 +51,12 @@ def compute_bnl(
     time_s: float | np.ndarray,
     surface_area_m2: float = 1.0,
     solution_volume_m3: float = 1.0e-3,
-) -> np.ndarray:
+) -> float | np.ndarray:
     """Cumulative Boron Normalised Loss [g/m^2]. BNL = integral(r_B * dt) * M_B."""
     M_B = 10.81  # g/mol
     r = np.asarray(boron_release_mol_m2_s)
     t = np.asarray(time_s)
     if r.ndim == 0:
         return float(r) * float(t) * M_B
-    return np.trapz(r, t) * M_B
+    return np.asarray(np.trapezoid(r, t) * M_B)
 

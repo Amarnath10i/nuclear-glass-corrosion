@@ -7,6 +7,8 @@ Implements 1-D finite-difference solver for:
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -17,8 +19,10 @@ def build_diffusion_matrix(n: int, D: float, dx: float) -> NDArray[np.float64]:
     diag = np.full(n, -2.0 * alpha)
     off  = np.full(n - 1, alpha)
     A = np.diag(diag) + np.diag(off, 1) + np.diag(off, -1)
-    A[0, 0] = -alpha; A[0, 1] = alpha
-    A[-1, -1] = 0.0;  A[-1, -2] = 0.0
+    A[0, 0] = -alpha
+    A[0, 1] = alpha
+    A[-1, -1] = 0.0
+    A[-1, -2] = 0.0
     return A
 
 
@@ -28,7 +32,7 @@ def solve_transport_1d(
     dx: float,
     dt: float,
     n_steps: int,
-    reaction_fn=None,
+    reaction_fn: Callable[[NDArray[np.float64]], NDArray[np.float64]] | None = None,
 ) -> NDArray[np.float64]:
     """Explicit Euler 1-D reactive transport solver."""
     n = len(C0)
@@ -54,4 +58,4 @@ def silicic_acid_saturation(
     log_Ksp = -0.338 - 7.889e-4 * temperature_K
     Ksp_mol_m3 = (10.0 ** log_Ksp) * 1e3
     C = np.asarray(C_Si_mol_m3, dtype=float)
-    return np.log10(np.maximum(C, 1e-30) / Ksp_mol_m3)
+    return np.asarray(np.log10(np.maximum(C, 1e-30) / Ksp_mol_m3))

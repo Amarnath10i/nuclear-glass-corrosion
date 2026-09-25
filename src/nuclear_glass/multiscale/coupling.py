@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Optional
 
 import numpy as np
 
@@ -53,7 +53,7 @@ def hierarchical_prediction(
     atomistic: AtomisticOutput,
     temperature_K: float,
     time_horizon_s: float,
-    mesoscale_surrogate: Optional[Callable] = None,
+    mesoscale_surrogate: Callable | None = None,
 ) -> ContinuumInput:
     meso_inputs = upscale_atomistic_to_mesoscale(atomistic, temperature_K)
     if mesoscale_surrogate is not None:

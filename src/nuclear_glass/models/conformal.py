@@ -25,7 +25,7 @@ class SplitConformalPredictor:
         self.alpha = alpha
         self._q_hat: float | None = None
 
-    def calibrate(self, y_cal: NDArray, y_pred_cal: NDArray) -> "SplitConformalPredictor":
+    def calibrate(self, y_cal: NDArray, y_pred_cal: NDArray) -> SplitConformalPredictor:
         scores = np.abs(y_cal - y_pred_cal)
         n = len(scores)
         level = np.ceil((n + 1) * (1.0 - self.alpha)) / n
@@ -50,7 +50,7 @@ class QuantileConformalPredictor:
         self.alpha = alpha
         self._correction: float | None = None
 
-    def calibrate(self, y_cal: NDArray, q_lo_cal: NDArray, q_hi_cal: NDArray) -> "QuantileConformalPredictor":
+    def calibrate(self, y_cal: NDArray, q_lo_cal: NDArray, q_hi_cal: NDArray) -> QuantileConformalPredictor:
         scores = np.maximum(q_lo_cal - y_cal, y_cal - q_hi_cal)
         n = len(scores)
         level = np.ceil((n + 1) * (1.0 - self.alpha)) / n

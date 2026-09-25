@@ -37,15 +37,17 @@ class GlassComposition:
             raise ValueError(f"Mol fractions must sum to 1.0, got {total:.3f}")
 
 
-def arrhenius_rate_constant(k0: float, Ea_kJ_mol: float, temperature_K: float) -> float:
+def arrhenius_rate_constant(
+    k0: float, Ea_kJ_mol: float, temperature_K: float | np.ndarray
+) -> float | np.ndarray:
     """Compute Arrhenius rate constant: r_0 = k0 * exp(-Ea / RT)."""
     Ea_J_mol = Ea_kJ_mol * 1e3
-    return k0 * math.exp(-Ea_J_mol / (R_GAS * temperature_K))
+    return k0 * np.exp(-Ea_J_mol / (R_GAS * np.asarray(temperature_K, dtype=float)))
 
 
 def affinity_factor(
     SI: float | np.ndarray,
-    temperature_K: float,
+    temperature_K: float | np.ndarray,
     eta: float = 1.0,
 ) -> float | np.ndarray:
     """Thermodynamic affinity factor (1 - exp(-A/RT))."""
@@ -57,8 +59,8 @@ def affinity_factor(
 def dissolution_rate(
     k0: float,
     Ea_kJ_mol: float,
-    temperature_K: float,
-    pH: float,
+    temperature_K: float | np.ndarray,
+    pH: float | np.ndarray,
     SI: float | np.ndarray,
     eta: float = 1.0,
     pH_power: float = -0.4,
@@ -67,7 +69,7 @@ def dissolution_rate(
     k = arrhenius_rate_constant(k0, Ea_kJ_mol, temperature_K)
     aH = 10.0 ** (-pH)
     f_aff = affinity_factor(SI, temperature_K, eta)
-    return k * (aH ** pH_power) * f_aff
+    return np.asarray(k * (aH ** pH_power) * f_aff)
 
 
 def gel_layer_thickness(
@@ -78,4 +80,4 @@ def gel_layer_thickness(
 ) -> float | np.ndarray:
     """Parabolic gel layer growth law [m]."""
     rate_mol = np.asarray(rate_m_s) * density_kg_m3 / molar_mass_kg_mol
-    return np.sqrt(2.0 * rate_mol * np.asarray(time_s))
+    return np.asarray(np.sqrt(2.0 * rate_mol * np.asarray(time_s)))

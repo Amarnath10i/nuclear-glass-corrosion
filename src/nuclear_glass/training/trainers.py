@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Optional
 
 import torch
 import torch.nn as nn
@@ -28,7 +28,7 @@ class PINOTrainer:
         lr: float = 1e-3,
         weight_decay: float = 1e-5,
         epochs: int = 200,
-        checkpoint_dir: Optional[Path] = None,
+        checkpoint_dir: Path | None = None,
         device: str = "cpu",
     ) -> None:
         self.model       = model.to(device)

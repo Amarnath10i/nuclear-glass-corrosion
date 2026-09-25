@@ -2,7 +2,8 @@
 
 import pandas as pd
 import pytest
-from nuclear_glass.data.loaders import synthetic_srl165, GlassCorrosionDataset
+
+from nuclear_glass.data.loaders import GlassCorrosionDataset, synthetic_srl165
 
 
 def test_synthetic_dataset_length():

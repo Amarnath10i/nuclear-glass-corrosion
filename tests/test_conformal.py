@@ -2,6 +2,7 @@
 
 import numpy as np
 import pytest
+
 from nuclear_glass.models.conformal import SplitConformalPredictor
 
 
