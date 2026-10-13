@@ -73,11 +73,11 @@ def dissolution_rate(
 
 
 def gel_layer_thickness(
-    rate_m_s: float | np.ndarray,
+    diffusivity_m2_s: float | np.ndarray,
     time_s: float | np.ndarray,
-    density_kg_m3: float = 2500.0,
-    molar_mass_kg_mol: float = 0.060,
 ) -> float | np.ndarray:
-    """Parabolic gel layer growth law [m]."""
-    rate_mol = np.asarray(rate_m_s) * density_kg_m3 / molar_mass_kg_mol
-    return np.asarray(np.sqrt(2.0 * rate_mol * np.asarray(time_s)))
+    """Thickness [m] of a diffusion-limited (parabolic) gel layer: L = sqrt(2 D t).
+
+    Follows from dL/dt = D / L with L(0) = 0.
+    """
+    return np.asarray(np.sqrt(2.0 * np.asarray(diffusivity_m2_s) * np.asarray(time_s)))

@@ -20,3 +20,21 @@ def test_split_conformal_coverage():
 def test_predict_before_calibrate_raises():
     with pytest.raises(RuntimeError):
         SplitConformalPredictor(alpha=0.1).predict(np.array([1.0, 2.0]))
+
+
+def test_tiny_calibration_set_gives_infinite_interval_not_an_error():
+    cp = SplitConformalPredictor(alpha=0.1).calibrate(np.array([1.0, 2.0]), np.array([1.1, 2.2]))
+    lo, hi = cp.predict(np.array([0.0]))
+    assert np.isneginf(lo[0]) and np.isposinf(hi[0])
+
+
+def test_average_coverage_is_at_least_the_target_over_many_splits():
+    rng = np.random.default_rng(0)
+    covered = []
+    for _ in range(400):
+        y = rng.standard_normal(60)
+        pred = np.zeros(60)
+        cp = SplitConformalPredictor(alpha=0.2).calibrate(y[:20], pred[:20])
+        lo, hi = cp.predict(pred[20:])
+        covered.append(np.mean((y[20:] >= lo) & (y[20:] <= hi)))
+    assert np.mean(covered) >= 0.8 - 0.01

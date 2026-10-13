@@ -60,3 +60,38 @@ def compute_bnl(
         return float(r) * float(t) * M_B
     return np.asarray(np.trapezoid(r, t) * M_B)
 
+
+
+def alteration_history(
+    time_s: np.ndarray,
+    forward_rate_m_s: float,
+    diffusivity_m2_s: float,
+    resumption_time_s: float | None = None,
+    amplification: float = 10.0,
+    glass_density_g_m3: float = 2.5e6,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Altered glass thickness [m] and boron normalised mass loss [g/m^2] over time.
+
+    A three-stage illustration of glass alteration, solved in closed form:
+
+    - Stage I: the glass retreats at the forward rate r1 while the gel layer is
+      thin, L = r1 t, until diffusion through the gel becomes slower than r1
+      (L_c = D / r1, at t_c = D / r1^2).
+    - Stage II: diffusion-limited, dL/dt = D / L, so L^2 = L_c^2 + 2 D (t - t_c).
+    - Stage III (optional, from resumption_time_s): secondary phases
+      destabilise the gel and the effective diffusivity grows by
+      `amplification`: L^2 = L_r^2 + 2 A D (t - t_r).
+
+    Boron is released congruently from the altered glass, so NL_B = rho * L.
+    """
+    t = np.asarray(time_s, dtype=float)
+    r1, d = forward_rate_m_s, diffusivity_m2_s
+    t_c = d / r1**2
+    l_c = d / r1
+    thickness = np.where(t < t_c, r1 * t, np.sqrt(l_c**2 + 2.0 * d * np.maximum(t - t_c, 0.0)))
+    if resumption_time_s is not None:
+        t_r = max(resumption_time_s, 0.0)
+        l_r = r1 * t_r if t_r < t_c else np.sqrt(l_c**2 + 2.0 * d * (t_r - t_c))
+        thickness = np.where(t > t_r, np.sqrt(l_r**2 + 2.0 * amplification * d * np.maximum(t - t_r, 0.0)),
+                             thickness)
+    return thickness, glass_density_g_m3 * thickness

@@ -1,0 +1,4 @@
+# Neural models (PINO, DeepONet, Bayesian NN) and their training loop.
+-r requirements.txt
+torch>=2.0.0
+wandb>=0.15.0

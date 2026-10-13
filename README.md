@@ -1,184 +1,72 @@
-# Nuclear Waste Glass Corrosion Prediction (100,000-Year Horizon)
+# Nuclear Waste Glass Corrosion
 
-**Physics-Informed Multi-Scale ML for Vitrified Nuclear Waste Long-Term Performance Assessment**
+Building blocks for predicting how borosilicate nuclear waste glass corrodes over geological time: glass dissolution physics, physics-informed neural operators, and conformal prediction intervals. Regulators ask for safety cases over ~100,000 years; laboratory tests last years at most, so any long-term prediction is an extrapolation and its uncertainty is the real deliverable.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org/)
+> **Status: early-stage library, not a validated model.** The physics and conformal-prediction modules are implemented and tested, and there is an interactive explorer. The neural models have implementations but have **not been trained**: the repository contains no laboratory data (loaders for SRL-165, ISG and VHT CSV files exist, but the data is not included), so there are no accuracy results yet, and nothing here is calibrated to real glass.
 
-## About the Project
-
-Safe disposal of high-level nuclear waste is one of the most pressing environmental challenges of our time. The international consensus is to immobilize this waste by vitrifying it into borosilicate glass and burying it in deep geological repositories. For these repositories to be approved, regulatory bodies require robust safety cases proving that the glass will contain the radioactive elements for over **100,000 years**.
-
-Because we cannot run laboratory experiments for 100 millennia, traditional methods rely on accelerated testing and complex, computationally expensive reactive transport models that struggle to scale over long time horizons.
-
-**This project bridges this gap by developing physics-informed machine learning (ML) surrogates that predict the long-term corrosion behavior of nuclear waste glass.**
-
-By embedding known physical laws (such as Transition-State Theory rate laws and mass conservation) directly into the neural network's loss function, our models can extrapolate far beyond the temporal limits of training data without violating thermodynamic constraints.
-
-## How It Works
-
-The repository implements a complete multi-scale framework that bridges atomic-level interactions to repository-scale predictions:
-
-1. **Multi-Scale Physics Coupling**
-   - **Atomistic Scale**: Data derived from Reactive Molecular Dynamics (ReaxFF) determines fundamental parameters like bond-breaking rates and activation energies.
-   - **Mesoscale**: We model the formation of the passivating "gel layer" on the glass surface and track its porosity and diffusion characteristics over time.
-   - **Continuum Scale**: The atomic and mesoscale parameters are homogenized and fed into 1D reactive transport models to predict large-scale radionuclide release.
-
-2. **Physics-Informed ML Surrogates (PINO / DeepONet)**
-   - Instead of running slow numerical PDE solvers for every scenario, we train neural operators (like FNOs and DeepONets) to learn the underlying solution operator.
-   - The networks are trained on experimental datasets (like SRL 165 and ISG) and penalized if their predictions violate the governing partial differential equations (PDEs) of reactive transport.
-   - **Result**: A model that runs 1000× faster than numerical simulators while remaining physically consistent.
-
-3. **Uncertainty Quantification (UQ)**
-   - For regulatory safety cases, predicting a single number isn't enough; we must rigorously quantify confidence bounds.
-   - The framework uses Bayesian Neural Networks to separate epistemic (model) uncertainty from aleatoric (data) uncertainty.
-   - We also apply split Conformal Prediction to guarantee strict coverage probabilities for our 100,000-year extrapolations.
-
-## Tools & Technologies
-
-This project is built using a modern scientific Python stack tailored for high-performance ML and physics simulations:
-
-- **Core ML Framework**: [PyTorch](https://pytorch.org/) (used for PINO, DeepONet, and Bayesian NNs)
-- **Data & Scientific Computing**: `numpy`, `pandas`, `scipy`
-- **Configuration Management**: `pydantic` and `omegaconf` for structured, type-safe experiment configs
-- **Experiment Tracking**: [Weights & Biases (WandB)](https://wandb.ai/) for logging metrics, losses, and hyperparameters
-- **Visualization**: `matplotlib` for domain-specific Arrhenius plots and uncertainty bounds
-- **Environment & CI/CD**: Docker for reproducible training environments, GitHub Actions for continuous integration, and `pre-commit` hooks for code formatting (using `ruff` and `black`)
-
----
-
-## Repository Structure
-
-```
-nuclear-glass-corrosion/
-├── data/                          # Experimental & simulation datasets
-│   ├── raw/                       # Original data (DO NOT COMMIT LARGE FILES)
-│   ├── processed/                 # Cleaned, normalized datasets
-│   └── benchmarks/                # Standard test cases (SRL, ISG, etc.)
-├── src/
-│   ├── nuclear_glass/             # Core package
-│   │   ├── physics/               # Physics models & constraints
-│   │   │   ├── thermodynamics.py  # Glass dissolution thermodynamics
-│   │   │   ├── kinetics.py        # Rate laws (TST, affinity-based)
-│   │   │   ├── transport.py       # Diffusion-reaction equations
-│   │   │   └── radiation.py       # Radiation-enhanced corrosion
-│   │   ├── models/                # ML architectures
-│   │   │   ├── pino.py            # Physics-Informed Neural Operator
-│   │   │   ├── deeponet.py        # DeepONet for operator learning
-│   │   │   ├── bayesian_nn.py     # Bayesian neural networks
-│   │   │   └── conformal.py       # Conformal prediction
-│   │   ├── multiscale/            # Multi-scale coupling
-│   │   │   ├── coupling.py        # Scale bridging
-│   │   │   └── homogenization.py  # Upscaling
-│   │   ├── data/                  # Data loading & preprocessing
-│   │   │   ├── loaders.py         # Experimental data loaders
-│   │   │   ├── simulation_io.py   # PFLOTRAN/TOUGHREACT parsers
-│   │   │   └── augmentation.py    # Physics-aware augmentation
-│   │   ├── training/              # Training pipelines
-│   │   │   ├── losses.py          # Physics-informed losses
-│   │   │   ├── trainers.py        # Custom trainers
-│   │   │   └── callbacks.py       # Logging, checkpointing
-│   │   ├── evaluation/            # Evaluation & UQ
-│   │   │   ├── metrics.py         # Domain-specific metrics
-│   │   │   ├── uncertainty.py     # UQ evaluation
-│   │   │   └── benchmarks.py      # Standard benchmarks
-│   │   └── utils/                 # Utilities
-│   │       ├── config.py          # Configuration management
-│   │       ├── logging.py         # Structured logging
-│   │       └── visualization.py   # Domain-specific plots
-│   └── cli/                       # Command-line interfaces
-├── experiments/                   # Experiment configs & scripts
-│   ├── configs/                   # YAML configs
-│   ├── scripts/                   # Training/eval scripts
-│   └── notebooks/                 # Exploratory notebooks
-├── tests/                         # Unit & integration tests
-├── docs/                          # Documentation
-├── papers/                        # Paper drafts & figures
-├── docker/                        # Dockerfiles for reproducibility
-├── .github/workflows/             # CI/CD
-├── pyproject.toml                 # Package config
-├── requirements.txt               # Dependencies
-├── environment.yml                # Conda environment
-└── README.md
-```
-
----
-
-## Quick Start
-
-### Installation
+## Try it
 
 ```bash
-# Using conda (recommended for scientific stack)
-conda env create -f environment.yml
-conda activate nuclear-glass
-
-# Or using pip
-pip install -e .
+pip install -r requirements.txt
+streamlit run app.py
 ```
 
-### Run Training
+The explorer (NumPy only; it also runs in the browser) shows:
+- **Dissolution rate**: the transition-state-theory rate law against temperature, pH and silica saturation, with an Arrhenius plot.
+- **Long-term alteration**: altered glass thickness and boron loss from 1 second to 100,000 years through three stages: forward dissolution, diffusion-limited growth through the gel (∝ √t), and an optional Stage III resumption.
+- **Conformal intervals**: split conformal prediction on synthetic data drawn from the rate law, with empirical coverage against the target at several α.
+
+## What is implemented
+
+| Module | Contents | Tested |
+|---|---|---|
+| `physics/thermodynamics.py` | Arrhenius rate constant, affinity factor (1 − 10^SI)^η, full TST rate r = k0·exp(−Ea/RT)·a(H⁺)^−0.4·f(A), parabolic gel layer L = √(2Dt) | yes |
+| `physics/kinetics.py` | Stage I/II/III rates, boron release, boron normalised loss, closed-form three-stage alteration history | yes |
+| `physics/transport.py` | 1D diffusion matrix and transport solve, silica saturation | partly |
+| `physics/radiation.py` | alpha-recoil damage, radiolysis, dose-rate enhancement factor | no |
+| `models/conformal.py` | split and quantile (CQR) conformal predictors | split: yes, including coverage over repeated splits; CQR: no |
+| `models/pino.py`, `deeponet.py`, `bayesian_nn.py` | 1D physics-informed FNO, DeepONet, Bayes-by-backprop MLP (PyTorch) | no; never trained |
+| `data/loaders.py` | CSV loaders for SRL-165 / ISG / VHT-style tables; a synthetic generator | yes |
+| `evaluation/` | relative L2, extrapolation bias, coverage and sharpness metrics | no |
+| `multiscale/` | homogenisation bounds (Hashin–Shtrikman, Kozeny–Carman) and placeholder scale-bridging functions | no |
+
+Fixes made while reviewing the code:
+- **Gel layer thickness** returned √(mol·m⁻²), not metres; it is now the diffusion-limited law L = √(2Dt), tested against its ODE.
+- **Conformal quantile** crashed for small calibration sets (the quantile level exceeded 1); it now returns an infinite interval, as the method prescribes.
+- **Entry points** for `nuclear_glass.cli` pointed at a module that does not exist; they were removed.
+
+## What it would take to be a real model
+
+1. **Data.** Published static-dissolution series (e.g. ISG at 90 °C, SRL-165 PCT/MCC-1) digitised into the loaders' CSV format, with the test conditions (S/V, T, pH) attached.
+2. **Calibration.** Bayesian calibration of k0, Ea, η and the gel diffusivity against those series, with held-out experiments for validation.
+3. **Surrogate.** Train the neural operators on reactive-transport simulations over the calibrated parameter posterior, so the surrogate is checked against the simulator, not against itself.
+4. **Uncertainty.** Propagate parameter uncertainty to 100,000 years and report intervals, with conformal calibration on held-out experiments as a check.
+
+## Install
 
 ```bash
-# Train PINO on SRL glass dataset
-python -m src.cli.train --config experiments/configs/pino_srl.yaml
-
-# Train DeepONet with physics constraints
-python -m src.cli.train --config experiments/configs/deeponet_affinity.yaml
-
-# Run multi-fidelity training (MD + continuum)
-python -m src.cli.train --config experiments/configs/multifidelity.yaml
+pip install -r requirements.txt        # physics, conformal prediction, app
+pip install -r requirements-ml.txt     # adds PyTorch for the neural models
+pip install -e ".[dev]" && pytest      # tests, ruff and mypy as in CI
 ```
 
-### Run Evaluation
+## Layout
 
-```bash
-# Evaluate on held-out test set with UQ
-python -m src.cli.evaluate --checkpoint checkpoints/pino_srl_best.pt --uq
-
-# Generate benchmark comparison table
-python -m src.cli.benchmark --config experiments/configs/benchmark.yaml
+```
+app.py                     Streamlit explorer
+src/nuclear_glass/
+  physics/                 rate laws, staged alteration, transport, radiation
+  models/                  conformal prediction; PINO, DeepONet, Bayesian NN (untrained)
+  data/                    loaders and synthetic data
+  evaluation/              metrics and uncertainty diagnostics
+  multiscale/              homogenisation and scale bridging
+  training/, utils/        loss functions, trainer, config, plotting
+tests/                     physics, conformal and data tests
+docs/physics.md            the equations
 ```
 
----
+## References
 
-## Key Datasets
-
-| Dataset | Description | Source | Timescale |
-|---------|-------------|--------|-----------|
-| **SRL 165** | Savannah River Lab glass, PCT-A tests | DOE | 1-10 years |
-| **ISG** | International Simple Glass (ISG) | CEA/ANDRA | 1-5 years |
-| **LAW/LAWA** | Low-Activity Waste glasses | PNNL | 1-2 years |
-| **MCC-1** | MCC-1 static leach tests | MCC | 1-10 years |
-| **VHT** | Vapor Hydration Tests (accelerated) | PNNL | 100-1000°C days |
-| **Natural Analogues** | Roman glass, basaltic glass | Literature | 1000-2M years |
-
----
-
-## Physics Constraints Implemented
-
-1. **Thermodynamic Consistency**: Affinity-based rate law (TST)
-   ```
-   r = k₀ exp(-Ea/RT) · (1 - exp(-A/RT))^η
-   ```
-
-2. **Mass Conservation**: ∂C/∂t = ∇·(D∇C) + R(C)
-
-3. **Gel Layer Growth**: Parabolic rate law with porosity evolution
-
-4. **Radiation Effects**: α-recoil damage + radiolysis enhancement
-
-5. **Uncertainty Quantification**: Aleatoric + Epistemic separation
-
----
-
-## Target Publications (Q1 Journals)
-
-| Paper | Target Journal | Timeline |
-|-------|----------------|----------|
-| **Physics-Informed Neural Operators for 100 kyr Glass Corrosion** | *Nature Materials* | Month 6-9 |
-| **Multi-Fidelity ML Coupling Atomistic MD to Continuum Transport** | *Journal of Nuclear Materials* | Month 9-12 |
-| **Conformal Prediction for Nuclear Waste Form Performance** | *Environmental Science & Technology* | Month 12-15 |
-| **Radiation-Enhanced Corrosion: ML Surrogate for Alpha-Dose Effects** | *Acta Materialia* | Month 15-18 |
-
+- Grambow, B. (1985). A general rate equation for nuclear waste glass corrosion. *MRS Proceedings* 44.
+- Gin, S. et al. (2013). An international initiative on long-term behavior of high-level nuclear waste glass. *Materials Today* 16(6).
+- Angelopoulos, A. N. and Bates, S. (2021). A gentle introduction to conformal prediction. arXiv:2107.07511.

@@ -13,6 +13,15 @@ import numpy as np
 from numpy.typing import NDArray
 
 
+def _conformal_quantile(scores: NDArray, alpha: float) -> float:
+    """The ceil((n + 1)(1 - alpha))-th smallest score; infinite when n is too small for that rank."""
+    n = len(scores)
+    rank = int(np.ceil((n + 1) * (1.0 - alpha)))
+    if rank > n:
+        return float("inf")
+    return float(np.sort(scores)[rank - 1])
+
+
 class SplitConformalPredictor:
     """Split conformal prediction using residual nonconformity scores.
 
@@ -27,9 +36,7 @@ class SplitConformalPredictor:
 
     def calibrate(self, y_cal: NDArray, y_pred_cal: NDArray) -> SplitConformalPredictor:
         scores = np.abs(y_cal - y_pred_cal)
-        n = len(scores)
-        level = np.ceil((n + 1) * (1.0 - self.alpha)) / n
-        self._q_hat = float(np.quantile(scores, level))
+        self._q_hat = _conformal_quantile(scores, self.alpha)
         return self
 
     def predict(self, y_pred: NDArray) -> tuple[NDArray, NDArray]:
@@ -52,9 +59,7 @@ class QuantileConformalPredictor:
 
     def calibrate(self, y_cal: NDArray, q_lo_cal: NDArray, q_hi_cal: NDArray) -> QuantileConformalPredictor:
         scores = np.maximum(q_lo_cal - y_cal, y_cal - q_hi_cal)
-        n = len(scores)
-        level = np.ceil((n + 1) * (1.0 - self.alpha)) / n
-        self._correction = float(np.quantile(scores, level))
+        self._correction = _conformal_quantile(scores, self.alpha)
         return self
 
     def predict(self, q_lo: NDArray, q_hi: NDArray) -> tuple[NDArray, NDArray]:
